@@ -19,7 +19,9 @@
                     Foreground="{Binding TextFontColor}" 
                     x:Name="textTest" 
                     FontFamily="{Binding TextFontFamily}" 
+                    LineHeight="{Binding TextFontLineHeight}"
                     FontSize="{Binding TextFontSize}" 
+                    Visibility="Hidden"
                     Canvas.Top="0" Canvas.Left="0"/>
             </Grid>
             <Image x:Name="ImageControl" 

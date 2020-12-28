@@ -103,6 +103,13 @@ namespace nametag_tool
             set { this.SetValue(IsSelectionAreaVisibleProperty, value); }
         }
 
+        public static DependencyProperty TextFontLineHeightProperty = DependencyProperty.Register("TextFontLineHeight", typeof(double), typeof(ImageOverlayer), new PropertyMetadata(12.0));
+        public double TextFontLineHeight
+        {
+            get { return (double)GetValue(TextFontLineHeightProperty); }
+            set { this.SetValue(TextFontLineHeightProperty, value); }
+        }
+
         /// <summary>
         /// Initializes a new instance of the ImageOverlayerControl.
         /// </summary>
@@ -112,6 +119,8 @@ namespace nametag_tool
 
             // add canvas control handlers
             addCanvasControlHandlers();
+
+            setDefaults();
 
             // add eventhandler
             RectangleControl.MouseEnter += RectangleControl_MouseEnter;
@@ -223,6 +232,14 @@ namespace nametag_tool
 
         }
 
+        public void setDefaults()
+        {
+            textTest.TextWrapping = TextWrapping.Wrap;
+            textTest.TextAlignment = TextAlignment.Center;
+            textTest.HorizontalAlignment = HorizontalAlignment.Stretch;
+            textTest.VerticalAlignment = VerticalAlignment.Center;
+        }
+
         public void updateSelectionArea()
         {
             //Release the mouse
@@ -243,14 +260,10 @@ namespace nametag_tool
             TextContainer.Width = rw;
             TextContainer.Height = rh;
 
-
-            textTest.TextWrapping = TextWrapping.Wrap;
-            textTest.TextAlignment = TextAlignment.Center;
-            textTest.HorizontalAlignment = HorizontalAlignment.Stretch;
-            textTest.VerticalAlignment = VerticalAlignment.Center;
-            // textTest.Width = rw;
-            // textTest.Height = rh;
             textTest.FontWeight = FontWeight.FromOpenTypeWeight(700);
+
+            // set text to visible
+            textTest.Visibility = Visibility.Visible;
 
             TextContainer.RenderTransform = new TranslateTransform(left, top);
         }

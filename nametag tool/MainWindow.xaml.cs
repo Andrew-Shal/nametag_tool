@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Xceed.Wpf.Toolkit;
 
 namespace nametag_tool
 {
@@ -29,17 +31,23 @@ namespace nametag_tool
         //
         ObservableCollection<string> names = new ObservableCollection<string>();
 
+        // 
+        public string exportImagesPath = "";
+
         public MainWindow()
         {
             InitializeComponent();
 
             OnRemoveBtnClickCommand = new ActionCommand(x => names.Remove(x.ToString()));
 
-            OnPreviewBtnClickCommand = new ActionCommand(x => { overlayer.Text = x.ToString(); placeholderTextInput.Text = x.ToString(); csvNamesListBox.SelectedValue = x; });
+            OnPreviewBtnClickCommand = new ActionCommand(x => { if (!overlayer.textTest.IsVisible) { System.Windows.MessageBox.Show("Select an area on the preview canvas");return; } overlayer.Text = x.ToString(); placeholderTextInput.Text = x.ToString(); csvNamesListBox.SelectedValue = x; });
 
-            FontSizeCombo.ItemsSource = Enumerable.Range(1, 8).Select(x => x * x);
+            // FontSizeCombo.ItemsSource = Enumerable.Range(1, 8).Select(x => x * x);
 
             sortByCbx.ItemsSource = Enum.GetValues(typeof(OrderBy));
+
+            HotizontalTextAlignmentCbx.ItemsSource = Enum.GetValues(typeof(HorizontalAlignment));
+            VeticalTextAlignmentCbx.ItemsSource = Enum.GetValues(typeof(VerticalAlignment));
         }
 
         private void selectCsvBtn_Click(object sender, RoutedEventArgs e)
@@ -47,7 +55,7 @@ namespace nametag_tool
             // check if names list is not already populated
             if(names.Count > 1)
             {
-                MessageBoxResult res = MessageBox.Show("Are you sure you want to select a new CSV file? Note that this will clear the current list", "Clear List",MessageBoxButton.YesNo);
+                MessageBoxResult res = System.Windows.MessageBox.Show("Are you sure you want to select a new CSV file? Note that this will clear the current list", "Clear List",MessageBoxButton.YesNo);
 
                 if (res != MessageBoxResult.Yes) return;
                
@@ -58,7 +66,7 @@ namespace nametag_tool
             // open selection dialog
             OpenFileDialog selectCsvDialog = new OpenFileDialog();
             selectCsvDialog.Multiselect = false;
-            selectCsvDialog.Filter = "Comma Separated Value Files|*.csv";
+            selectCsvDialog.Filter = "Comma Separated|*.txt";
 
             if (selectCsvDialog.ShowDialog() == true) {
                 // parse csv
@@ -73,13 +81,16 @@ namespace nametag_tool
 
                 // save csv items in data structure
                 for (var i = 0; i < namesArr.Length; i++) {
-                    names.Add(namesArr[i]);
+                    if(namesArr[i].Trim().Length > 0)
+                    {
+                        names.Add(namesArr[i].Trim());
+                    }
                 }
 
                 // set datasource for view listbox
                 csvNamesListBox.ItemsSource = names;
 
-                names = OrderThoseGroups(names,OrderBy.nameDesc);
+                // names = OrderThoseGroups(names,OrderBy.nameDesc);
             }
 
         }
@@ -104,8 +115,6 @@ namespace nametag_tool
         {
             TextBox elem = (TextBox)sender;
             overlayer.Text = elem.Text;
-            overlayer.CanvasControl.UpdateLayout();
-            overlayer.updateSelectionArea();
         }
 
         public enum OrderBy { 
@@ -149,27 +158,20 @@ namespace nametag_tool
             overlayer.updateSelectionArea();
         }
 
-        private void FontSizeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void FontSizeCombo_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            ComboBox elem = (ComboBox)sender;
-
             try
             {
-                if (elem.SelectedItem != null)
-                {
-                    double val;
-
-                    if (double.TryParse(elem.SelectedItem.ToString(), out val))
-                    {
-                        overlayer.TextFontSize = val;
-                        overlayer.CanvasControl.UpdateLayout();
-                        overlayer.updateSelectionArea();
-                    }
-                }
+                DoubleUpDown cb = (DoubleUpDown)sender;
+                double fontSize;
+                double.TryParse(cb.Text, out fontSize);
+                overlayer.TextFontSize = fontSize;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("value entered is not valid.");
+                System.Windows.MessageBox.Show("Invalid value entered");
+                // set a default when an err thrown
+                overlayer.TextFontSize = 12.00;
             }
         }
 
@@ -195,6 +197,202 @@ namespace nametag_tool
 
             Enum.TryParse<OrderBy>(cb.SelectedValue.ToString(), out sortOrder);
             names = OrderThoseGroups(names, sortOrder);
+        }
+
+        private void TextLineHeightCbx_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            try
+            {
+                // update line height
+                DoubleUpDown cb = (DoubleUpDown)sender;
+                overlayer.TextFontLineHeight = (double)cb.Value;
+            }catch(Exception ex)
+            {
+                // set a default when an err thrown
+                overlayer.TextFontLineHeight = 18.0;
+            }
+        }
+
+        private void HotizontalTextAlignmentCbx_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox cb = (ComboBox)sender;
+            HorizontalAlignment ha;
+
+            Enum.TryParse<HorizontalAlignment>(cb.SelectedValue.ToString(), out ha);
+            overlayer.textTest.HorizontalAlignment = ha;
+        }
+
+        private void VeticalTextAlignmentCbx_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox cb = (ComboBox)sender;
+            VerticalAlignment va;
+
+            Enum.TryParse<VerticalAlignment>(cb.SelectedValue.ToString(), out va);
+            overlayer.textTest.VerticalAlignment = va;
+        }
+
+
+        private void AddNewNameBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // empty, ignore 
+            if (AddNewNameInp.Text.Trim().Length < 1) return;
+
+            // add new name to names obj
+            names.Add(AddNewNameInp.Text.Trim());
+
+            // assume they havent added a list
+            if(csvNamesListBox.Items.Count < 1)
+            {
+                // set datasource for view listbox
+                csvNamesListBox.ItemsSource = names;
+            }
+
+            // select addition
+            csvNamesListBox.Focus();
+            csvNamesListBox.SelectedValue = AddNewNameInp.Text;
+            csvNamesListBox.ScrollIntoView(csvNamesListBox.SelectedValue);
+            // might want call sortby to update its position if there was a pre existing list
+
+        }
+
+        private void ExportCurrentCsvBtn_Click(object sender, RoutedEventArgs e)
+        {
+
+            // select folder
+            System.Windows.Forms.FolderBrowserDialog folderDialog = new System.Windows.Forms.FolderBrowserDialog();
+            folderDialog.ShowNewFolderButton = false;
+            folderDialog.RootFolder = Environment.SpecialFolder.Desktop;
+
+            System.Windows.Forms.DialogResult res = folderDialog.ShowDialog();
+
+            if (res == System.Windows.Forms.DialogResult.OK)
+            {
+                string sPath = folderDialog.SelectedPath;
+                string sfile = sPath + @"\names_list.txt";
+
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(sfile))
+                {
+                    foreach (string name in names)
+                    {
+                            file.WriteLine(name+",");
+                    }
+                    // when done, open folder
+                    MessageBoxResult res2 = System.Windows.MessageBox.Show("export completed, do you want to open the folder?", "Open Folder", MessageBoxButton.YesNo);
+                    if(res2 == MessageBoxResult.Yes)
+                    {
+                        // open folder
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                        {
+                            FileName = sPath,
+                            UseShellExecute = true,
+                            Verb = "open"
+                        });
+                    }
+
+
+                }
+            }
+
+        }
+        private void ExportToPng(Uri path, Canvas surface)
+        {
+            if (path == null) return;
+
+            try
+            {
+                // Save current canvas transform
+                Transform transform = surface.LayoutTransform;
+                // reset current transform (in case it is scaled or rotated)
+                surface.LayoutTransform = null;
+
+                // Get the size of the canvas
+
+                // Instead of canvas size, we can get the image size
+                Size size = new Size(surface.ActualWidth, surface.ActualHeight);
+                //Size size = new Size(surface.ImageControl.ActualWidth,surface.ImageControl.ActualHeight);
+
+                // Measure and arrange the surface
+                // very important
+                surface.Measure(size);
+                surface.Arrange(new Rect(size));
+
+                // Create a rendeer bitmap and push the surface to it
+                RenderTargetBitmap renderBitmap = new RenderTargetBitmap((int)size.Width,(int)size.Height,96d,96d,PixelFormats.Pbgra32);
+                renderBitmap.Render(surface);
+
+                // Create a file stream for saving image
+                using (FileStream outStream = new FileStream(path.LocalPath, FileMode.Create))
+                {
+                    // Use png encoder for our data
+                    PngBitmapEncoder encoder = new PngBitmapEncoder();
+                    // push the rendered bitmap to it
+                    encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+                    // save the data to the stream
+                    encoder.Save(outStream);
+                }
+
+                // Restore previously saved layout
+                surface.LayoutTransform = transform;
+
+            }catch(Exception ex)
+            {
+                System.Windows.MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private void CreateImageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // check if an out folder is selected
+            if(exportImagesPath.Length < 1)
+            {
+                MessageBoxResult res = System.Windows.MessageBox.Show("Please select an output folder first","No Output folder selected");
+                if(res == MessageBoxResult.OK)
+                {
+                    OutputFolderPathInput.Focus();
+                }
+                return;
+            }
+
+            // get name of what is in placeholderTextInput
+             var fullFilePath = exportImagesPath + @"\" + placeholderTextInput.Text + ".png";
+
+            if(placeholderTextInput.Text.Length < 1)
+            {
+                // there is no name in the placeholder control
+                System.Windows.MessageBox.Show("Please enter text in the placeholder element");
+
+                // focus on placeholder input elem
+                placeholderTextInput.Focus();
+                return;
+            }
+
+            // call export to png, since it is the single image button we just export what is currently on the canvas
+            ExportToPng(new Uri(fullFilePath), overlayer.CanvasControl);
+        }
+
+        private void OutputFolderBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // select folder
+            System.Windows.Forms.FolderBrowserDialog folderDialog = new System.Windows.Forms.FolderBrowserDialog();
+            folderDialog.ShowNewFolderButton = false;
+            folderDialog.RootFolder = Environment.SpecialFolder.Desktop;
+
+            System.Windows.Forms.DialogResult res = folderDialog.ShowDialog();
+
+            if (res == System.Windows.Forms.DialogResult.OK)
+            {
+                string sPath = folderDialog.SelectedPath;
+
+
+                // set global var to location
+                exportImagesPath = sPath;
+
+                // update ui inp element
+                OutputFolderPathInput.Text = exportImagesPath;
+
+            }
+
+
         }
     }
 
