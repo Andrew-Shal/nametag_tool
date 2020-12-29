@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:nametag_tool"
         mc:Ignorable="d"
         x:Name="Window"
-        Title="NameTag App" Height="540" Width="992" MinWidth="992" MinHeight="540">
+        Title="NameTag App - version 1.0" Height="540" Width="992" MinWidth="992" MinHeight="540">
     <Window.Resources>
         <DataTemplate x:Key="ListBoxItemTemplate">
             <Grid MinWidth="300px">
