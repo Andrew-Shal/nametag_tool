@@ -259,14 +259,14 @@ namespace nametag_tool
                 csvNamesListBox.ItemsSource = names;
             }
 
-            // clear add new current text
-            AddNewNameInp.Clear();
-
             // select addition
             csvNamesListBox.Focus();
             csvNamesListBox.SelectedValue = AddNewNameInp.Text;
             csvNamesListBox.ScrollIntoView(csvNamesListBox.SelectedValue);
             // might want call sortby to update its position if there was a pre existing list
+
+            // clear add new current text
+            AddNewNameInp.Clear();
 
         }
 
