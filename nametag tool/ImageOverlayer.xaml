@@ -6,7 +6,7 @@
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     Height="auto" Width="auto">
     <Grid  x:Name="LayoutRoot">
-        <Canvas x:Name="CanvasControl" Background="#FF262626" MouseEnter="CanvasControl_MouseEnter">
+        <Canvas x:Name="CanvasControl" Background="#FF262626" MouseEnter="CanvasControl_MouseEnter" Width="{Binding ActualWidth, ElementName=ImageControl}" Height="{Binding ActualHeight, ElementName=ImageControl}">
             <Rectangle Fill="{Binding SelectionAreaBcgColor}" StrokeDashArray="5" 
                 Stroke="{Binding MarchingAntsColor}" Visibility="{Binding IsSelectionAreaVisible}" 
                 x:Name="RectangleControl" Width="50" Height="50" 
@@ -25,8 +25,8 @@
                     Canvas.Top="0" Canvas.Left="0"/>
             </Grid>
             <Image x:Name="ImageControl" 
-                   Height="{Binding ActualHeight, ElementName=CanvasControl}"
-                   Width="{Binding ActualWidth, ElementName=CanvasControl}" 
+                   Height="{Binding Height}"
+                   Width="{Binding Width}" 
                    Source="{Binding BackgroundImage}"
                    />
         </Canvas>

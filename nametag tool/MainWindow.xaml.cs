@@ -34,11 +34,14 @@ namespace nametag_tool
         // 
         public string exportImagesPath = "";
 
+        // will append dynamic dates to folder outputs
+        public const string DEFAULT_DIR_NAME = "nametag_exports - ";
+
         public MainWindow()
         {
             InitializeComponent();
 
-            OnRemoveBtnClickCommand = new ActionCommand(x => names.Remove(x.ToString()));
+            OnRemoveBtnClickCommand = new ActionCommand(x => { names.Remove(x.ToString()); /* clear text that is in preview if it was the removed item*/ if (x.ToString() == placeholderTextInput.Text) { placeholderTextInput.Clear(); } });
 
             OnPreviewBtnClickCommand = new ActionCommand(x => { if (!overlayer.textTest.IsVisible) { System.Windows.MessageBox.Show("Select an area on the preview canvas");return; } overlayer.Text = x.ToString(); placeholderTextInput.Text = x.ToString(); csvNamesListBox.SelectedValue = x; });
 
@@ -48,6 +51,15 @@ namespace nametag_tool
 
             HotizontalTextAlignmentCbx.ItemsSource = Enum.GetValues(typeof(HorizontalAlignment));
             VeticalTextAlignmentCbx.ItemsSource = Enum.GetValues(typeof(VerticalAlignment));
+
+            names.CollectionChanged += Names_CollectionChanged;
+        }
+
+        private void Names_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            // disable batch creation button if names is not populated
+            bool shouldBeEnabled = names.Count < 1 ? false : true;
+            StartBatchCreationBtn.IsEnabled = sortByCbx.IsEnabled = ExportCurrentCsvBtn.IsEnabled = shouldBeEnabled;
         }
 
         private void selectCsvBtn_Click(object sender, RoutedEventArgs e)
@@ -89,8 +101,6 @@ namespace nametag_tool
 
                 // set datasource for view listbox
                 csvNamesListBox.ItemsSource = names;
-
-                // names = OrderThoseGroups(names,OrderBy.nameDesc);
             }
 
         }
@@ -107,8 +117,10 @@ namespace nametag_tool
                 var converter = new ImageSourceConverter();
 
                 overlayer.BackgroundImage = (ImageSource)converter.ConvertFromInvariantString(filePath);
+
+                overlayer.CanvasControl.UpdateLayout();
+                overlayer.updateSelectionArea();
             }
-            // load image to image overlay control
         }
 
         private void placeholderTextInput_TextChanged(object sender, TextChangedEventArgs e)
@@ -247,6 +259,9 @@ namespace nametag_tool
                 csvNamesListBox.ItemsSource = names;
             }
 
+            // clear add new current text
+            AddNewNameInp.Clear();
+
             // select addition
             csvNamesListBox.Focus();
             csvNamesListBox.SelectedValue = AddNewNameInp.Text;
@@ -342,6 +357,7 @@ namespace nametag_tool
 
         private void CreateImageBtn_Click(object sender, RoutedEventArgs e)
         {
+
             // check if an out folder is selected
             if(exportImagesPath.Length < 1)
             {
@@ -366,8 +382,65 @@ namespace nametag_tool
                 return;
             }
 
+
+            // check if file name already exists
+
+            if (File.Exists(fullFilePath))
+            {
+                // show message box with error
+                MessageBoxResult res2 =  System.Windows.MessageBox.Show("A file already exists in the folder. Do you want to keep both files? If no, file will be overwtitten","File Exists",MessageBoxButton.YesNo);
+
+                if(res2 == MessageBoxResult.Yes)
+                {
+                    // rename file
+                    fullFilePath = fileNameIfExists(fullFilePath, placeholderTextInput.Text, 1);
+                }
+            }
+
+            overlayer.RectangleControl.Visibility = Visibility.Hidden;
+            overlayer.CanvasControl.UpdateLayout();
+            overlayer.updateSelectionArea();
+
             // call export to png, since it is the single image button we just export what is currently on the canvas
             ExportToPng(new Uri(fullFilePath), overlayer.CanvasControl);
+
+
+            // when done, open folder
+            MessageBoxResult res3 = System.Windows.MessageBox.Show("Image Created, do you want to open the folder?", "Open Folder", MessageBoxButton.YesNo);
+            if (res3 == MessageBoxResult.Yes)
+            {
+                // open folder
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = exportImagesPath,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+        }
+
+        private string fileNameIfExists(string pathToFile, string fileName, int currentCount)
+        {
+            if (File.Exists(pathToFile))
+            {
+                var fName = fileName;
+                string temp = exportImagesPath + @"\" + fName + $"({currentCount})" + ".png";
+                int count = currentCount + 1;
+                return fileNameIfExists(temp, fileName,count);
+            }
+            return pathToFile;
+        }
+
+        private string dirNameIfExists(string fullDirPath, int currentCount)
+        {
+            if (Directory.Exists(fullDirPath))
+            {
+                var dName = DEFAULT_DIR_NAME;
+                string temp = exportImagesPath + @"\" + dName + DateTime.Now.ToString("dd-MM-yy") + $"({currentCount})";
+                int count = currentCount + 1;
+                return dirNameIfExists(temp, count);
+            }
+            return fullDirPath;
         }
 
         private void OutputFolderBtn_Click(object sender, RoutedEventArgs e)
@@ -383,16 +456,104 @@ namespace nametag_tool
             {
                 string sPath = folderDialog.SelectedPath;
 
-
                 // set global var to location
                 exportImagesPath = sPath;
 
                 // update ui inp element
                 OutputFolderPathInput.Text = exportImagesPath;
+            }
+        }
 
+        private void StartBatchCreationBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // check if an out folder is selected
+            if (exportImagesPath.Length < 1)
+            {
+                MessageBoxResult res1 = System.Windows.MessageBox.Show("Please select an output folder first", "No Output folder selected");
+                if (res1 == MessageBoxResult.OK)
+                {
+                    OutputFolderPathInput.Focus();
+                }
+                return;
             }
 
+            // create folder
+            string dirFullPath = exportImagesPath + @"\" + DEFAULT_DIR_NAME + DateTime.Now.ToString("dd-MM-yy");
 
+            if (Directory.Exists(dirFullPath))
+            {
+                MessageBoxResult res = System.Windows.MessageBox.Show("A directory already exists with the name. Do you want to add to the existing directory?", "Directory Exists", MessageBoxButton.YesNo);
+                
+                // recurse by adding count
+                if (res == MessageBoxResult.No)
+                {
+                    // rename folder by adding an increment count
+                    dirFullPath = dirNameIfExists(dirFullPath, 1);
+                    Directory.CreateDirectory(dirFullPath);
+                }
+                else
+                {
+                    // use same directory, do not create any directory
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(dirFullPath);
+            }
+
+            // save original path
+            var bck = exportImagesPath;
+            exportImagesPath = dirFullPath;
+
+            // iterate over names list and create images 
+            foreach ( string name in names)
+            {
+                // 
+                // overlayer.Text = name;
+                placeholderTextInput.Text = name;
+                overlayer.RectangleControl.Visibility = Visibility.Hidden;
+                overlayer.CanvasControl.UpdateLayout();
+                overlayer.updateSelectionArea();
+
+                // get name of what is in placeholderTextInput
+                var fullFilePath = exportImagesPath + @"\" + name + ".png";
+
+                // set to not overwrite files by default, could change in the future. message box prompts that file already exists, ask if 
+                // user wants to overwrite or rename, and if they want to do for all the rest. use a flag, should overwrite
+                fullFilePath = fileNameIfExists(fullFilePath, name, 1);
+
+                // call export to png
+                ExportToPng(new Uri(fullFilePath), overlayer.CanvasControl);
+            }
+
+            // when done, open folder
+            MessageBoxResult res2 = System.Windows.MessageBox.Show("All images have been created, do you want to view the output folder?", "Batch Creation Completed", MessageBoxButton.YesNo);
+            if (res2 == MessageBoxResult.Yes)
+            {
+                // open folder
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = dirFullPath,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+
+            // restore path to original
+            exportImagesPath = bck;
+        }
+
+        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            //
+            Slider elem = (Slider)sender;
+
+            var scale = Math.Round(elem.Value, 2);
+            var percent = scale * 100;
+            // 
+            ZoomSliderLabel.Content = $"{percent}%";
+
+            overlayer.LayoutTransform = new ScaleTransform(scale,scale);
         }
     }
 

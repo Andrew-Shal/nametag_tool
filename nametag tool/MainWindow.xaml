@@ -26,7 +26,7 @@
             </Grid>
         </DataTemplate>
     </Window.Resources>
-    <Grid>
+    <Grid Margin="25">
         <!--Grid.ContextMenu>
             <ContextMenu>
                 <MenuItem Header="Select Template Image"></MenuItem>
@@ -46,17 +46,17 @@
             <Button x:Name="selectPlaceholderBtn" Content="Select Placeholder Image" MaxWidth="200" Click="selectPlaceholderBtn_Click"></Button>
         </StackPanel>
         <DockPanel Grid.Row="1" Grid.RowSpan="2"  Grid.Column="0" x:Name="CsvListContainer">
-            <Label x:Name="namesFoundCountLbl" DockPanel.Dock="Top" Content="- names found in csv file"></Label>
             <Grid DockPanel.Dock="Top">
+                <Label x:Name="namesFoundCountLbl" HorizontalAlignment="Left" Content="- names found in csv file"></Label>
                 <Label x:Name="sortByLbl" Width="70px" Margin="0,0,80,0" HorizontalAlignment="Right" VerticalAlignment="Top">sort by:</Label>
-                <ComboBox x:Name="sortByCbx" Width="100px" Height="28" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" SelectionChanged="ComboBox_SelectionChanged" ></ComboBox>
+                <ComboBox x:Name="sortByCbx" Width="100px" Height="28" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" IsEnabled="False" SelectionChanged="ComboBox_SelectionChanged" ></ComboBox>
             </Grid>
             <!-- list names parsed in file in a scrollable text area read only box -->
             <Grid DockPanel.Dock="Bottom">
                 <Label x:Name="AddNewLbl" Margin="0,0,0,0" HorizontalAlignment="Left">Add new name:</Label>
                 <TextBox x:Name="AddNewNameInp" Width="250px" Margin="0,26,0,0" HorizontalAlignment="Left"></TextBox>
                 <Button x:Name="AddNewNameBtn" Width="100px" Height="28" Margin="255,26,0,0" HorizontalAlignment="left" Click="AddNewNameBtn_Click">Add</Button>
-                <Button x:Name="ExportCurrentCsvBtn" Width="100px" Height="28" Margin="0,26,0,0" HorizontalAlignment="Right" Click="ExportCurrentCsvBtn_Click">Export Csv</Button>
+                <Button x:Name="ExportCurrentCsvBtn" Width="100px" Height="28" Margin="0,26,0,0" HorizontalAlignment="Right" IsEnabled="False" Click="ExportCurrentCsvBtn_Click">Export Csv</Button>
             </Grid>
             <ListBox x:Name="csvNamesListBox" ItemTemplate="{StaticResource ListBoxItemTemplate}"/>
             
@@ -64,7 +64,7 @@
         <StackPanel Grid.Row="0" Grid.Column="1">
             <!-- control buttons -->
             <Button x:Name="CreateImageBtn" Content="Create Image" MaxWidth="200" Click="CreateImageBtn_Click"></Button>
-            <Button Content="Start Batch Creation" MaxWidth="200"></Button>
+            <Button x:Name="StartBatchCreationBtn" Content="Start Batch Creation" MaxWidth="200" IsEnabled="False" Click="StartBatchCreationBtn_Click"></Button>
             <!-- dialog should autmatically open once start batch process btn clicked -->
             <Grid MaxWidth="200">
                 <Label Content="export output location:" Height="28" HorizontalAlignment="Left" Name="outputFolderPathLabel" VerticalAlignment="Top" />
@@ -80,12 +80,16 @@
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
                 <DockPanel Grid.Row="0">
-                    <Label DockPanel.Dock="Top" Content="Image Preview Box" HorizontalContentAlignment="Center"></Label>
+                    <Grid DockPanel.Dock="Top">
+                        <Label  Content="Image Preview Box" HorizontalContentAlignment="Left" Margin="0,0,0,0"></Label>
+                        <Slider x:Name="zoomSlider" Orientation="Horizontal" Minimum="0" Maximum="1" SmallChange=".1" LargeChange=".2" Width="150" HorizontalAlignment="Right" Margin="0,3,35,0" ValueChanged="zoomSlider_ValueChanged" />
+                        <Label x:Name="ZoomSliderLabel" Margin="0,0,0,0" HorizontalAlignment="Right" Content="100"/>
+                    </Grid>
                     <!-- Image preview box -->
                         <!-- addding a simple image box, temporarily -->
                         <!--Image Grid.Row="1" Grid.Column="0" Source="nametag.jpg"></Image-->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <local:ImageOverlayer x:Name="overlayer"  BackgroundImage="nametag.jpg" InSelectionMode="True" Text="hello" MinWidth="600px"  MaxWidth="600px" MinHeight="305" MaxHeight="305" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="#FF262626">
+                        <local:ImageOverlayer x:Name="overlayer"  BackgroundImage="nametag.jpg" InSelectionMode="True" Text="hello" />
                     </ScrollViewer>
                         <!-- create a wpf control -->
                         <!-- 
