@@ -5,7 +5,7 @@
     xmlns:local="clr-namespace:nametag_tool" 
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     Height="auto" Width="auto">
-    <Grid  x:Name="LayoutRoot">
+    <Grid  x:Name="LayoutRoot" HorizontalAlignment="Center" VerticalAlignment="Center">
         <Canvas x:Name="CanvasControl" Background="#FF262626" MouseEnter="CanvasControl_MouseEnter" Width="{Binding ActualWidth, ElementName=ImageControl}" Height="{Binding ActualHeight, ElementName=ImageControl}">
             <Rectangle Fill="{Binding SelectionAreaBcgColor}" StrokeDashArray="5" 
                 Stroke="{Binding MarchingAntsColor}" Visibility="{Binding IsSelectionAreaVisible}" 

@@ -1,0 +1,36 @@
+﻿<Window x:Class="nametag_tool.ProgressBarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:nametag_tool"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d"
+        Title="ProgressBar Window" Height="165" MinHeight="165" MaxHeight="500" Width="600" MaxWidth="600" MinWidth="400" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid Margin="20,20,20,20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="57*"/>
+            <ColumnDefinition Width="31*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Grid.ColumnSpan="2">
+            <ProgressBar x:Name="ProgressBarControl" Height="20px" Width="450px" Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Minimum="0" Maximum="100"/>
+            <Label x:Name="ProgressPercentageLabel" Margin="0,0,50,0" HorizontalAlignment="Right" VerticalAlignment="Center" Width="50px" HorizontalContentAlignment="Center">-</Label>
+            <Button x:Name="CancelOperationButton" Width="50px" Height="20" HorizontalAlignment="Right" Click="CancelOperationButton_Click">Cancel</Button>
+        </Grid>
+        <Grid Grid.Row="1" Grid.ColumnSpan="2">
+            <Label x:Name="ProgressInfoLabel"></Label>
+        </Grid>
+        <Grid Grid.Row="2" Grid.ColumnSpan="2">
+            <Expander x:Name="ViewDetailsExpander" Header="View Details" ExpandDirection="Down" IsExpanded="False" Expanded="ViewDetailsExpander_Expanded" Collapsed="ViewDetailsExpander_Collapsed">
+                <ScrollViewer Height="300">
+                    <TextBlock x:Name="ViewDetailsListBox" Visibility="Hidden"/>
+                </ScrollViewer>
+            </Expander>
+        </Grid>
+    </Grid>
+</Window>

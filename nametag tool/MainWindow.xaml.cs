@@ -37,6 +37,7 @@ namespace nametag_tool
         // will append dynamic dates to folder outputs
         public const string DEFAULT_DIR_NAME = "nametag_exports - ";
 
+
         public MainWindow()
         {
             InitializeComponent();
@@ -45,14 +46,20 @@ namespace nametag_tool
 
             OnPreviewBtnClickCommand = new ActionCommand(x => { if (!overlayer.textTest.IsVisible) { System.Windows.MessageBox.Show("Select an area on the preview canvas");return; } overlayer.Text = x.ToString(); placeholderTextInput.Text = x.ToString(); csvNamesListBox.SelectedValue = x; });
 
-            // FontSizeCombo.ItemsSource = Enumerable.Range(1, 8).Select(x => x * x);
-
             sortByCbx.ItemsSource = Enum.GetValues(typeof(OrderBy));
 
             HotizontalTextAlignmentCbx.ItemsSource = Enum.GetValues(typeof(HorizontalAlignment));
             VeticalTextAlignmentCbx.ItemsSource = Enum.GetValues(typeof(VerticalAlignment));
 
             names.CollectionChanged += Names_CollectionChanged;
+
+            // set defaults
+            FontFamilyCombo.SelectedIndex = 0;
+            FontSizeCombo.Value = 60.0;
+            VeticalTextAlignmentCbx.SelectedItem = VerticalAlignment.Center;
+            HotizontalTextAlignmentCbx.SelectedItem = HorizontalAlignment.Center;
+            backgroundColorPickerControl.SelectedColor = Colors.Black;
+            zoomSlider.Value = .26; // hard code optimal size for default image in image preview control
         }
 
         private void Names_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -102,7 +109,35 @@ namespace nametag_tool
                 // set datasource for view listbox
                 csvNamesListBox.ItemsSource = names;
             }
+        }
 
+        public class Dimension
+        {
+            public double Width{get;set;}
+            public double Height { get; set; }
+            public Dimension(double width, double height)
+            {
+                Width = width;
+                Height = height;
+            }
+        }
+
+        // return a double value ( x > 0, x <= 1 )
+        // optimal_width = (100 / (img_width / container_width)) / 100
+        // optimal_height = (100 / (img_height / container_height)) / 100
+        private double calculateOptimalZoom(Dimension imageDimension, Dimension containerDimension)
+        {
+            // only if height or width of image is larger than its container
+            if(imageDimension.Height > containerDimension.Height || imageDimension.Width > containerDimension.Width)
+            {
+                // do both calculations and test which is the smaller
+                var eq1 = (100 / (imageDimension.Width / containerDimension.Width)) / 100;
+                var eq2 = (100 / (imageDimension.Height / containerDimension.Height)) / 100;
+
+                return eq1 <= eq2 ? eq1 : eq2;
+            }
+            // image is smaller than it's parent container, return full size 100%
+            return 1d;
         }
 
         private void selectPlaceholderBtn_Click(object sender, RoutedEventArgs e)
@@ -120,6 +155,19 @@ namespace nametag_tool
 
                 overlayer.CanvasControl.UpdateLayout();
                 overlayer.updateSelectionArea();
+
+                // height or width is not needed since it is being mapped to a silder with a single value
+                double optimalZoom = calculateOptimalZoom(
+                    new Dimension(
+                        overlayer.ImageControl.ActualWidth,
+                        overlayer.ImageControl.ActualHeight),
+                    new Dimension(
+                        ImagePreviewBoxScrollContainer.ActualWidth,
+                        ImagePreviewBoxScrollContainer.ActualHeight)
+                    );
+
+                // add 1 percent padding on either 
+                zoomSlider.Value = optimalZoom != 1d ? (optimalZoom - .01d) : optimalZoom;
             }
         }
 
@@ -272,7 +320,6 @@ namespace nametag_tool
 
         private void ExportCurrentCsvBtn_Click(object sender, RoutedEventArgs e)
         {
-
             // select folder
             System.Windows.Forms.FolderBrowserDialog folderDialog = new System.Windows.Forms.FolderBrowserDialog();
             folderDialog.ShowNewFolderButton = false;
@@ -303,11 +350,8 @@ namespace nametag_tool
                             Verb = "open"
                         });
                     }
-
-
                 }
             }
-
         }
         private void ExportToPng(Uri path, Canvas surface)
         {
@@ -505,29 +549,13 @@ namespace nametag_tool
             var bck = exportImagesPath;
             exportImagesPath = dirFullPath;
 
-            // iterate over names list and create images 
-            foreach ( string name in names)
-            {
-                // 
-                // overlayer.Text = name;
-                placeholderTextInput.Text = name;
-                overlayer.RectangleControl.Visibility = Visibility.Hidden;
-                overlayer.CanvasControl.UpdateLayout();
-                overlayer.updateSelectionArea();
-
-                // get name of what is in placeholderTextInput
-                var fullFilePath = exportImagesPath + @"\" + name + ".png";
-
-                // set to not overwrite files by default, could change in the future. message box prompts that file already exists, ask if 
-                // user wants to overwrite or rename, and if they want to do for all the rest. use a flag, should overwrite
-                fullFilePath = fileNameIfExists(fullFilePath, name, 1);
-
-                // call export to png
-                ExportToPng(new Uri(fullFilePath), overlayer.CanvasControl);
-            }
+            ProgressBarWindow progressBarWindow = new ProgressBarWindow(overlayer,dirFullPath,names.ToList());
+            progressBarWindow.Owner = GetWindow(this);
+            progressBarWindow.ShowDialog();
 
             // when done, open folder
-            MessageBoxResult res2 = System.Windows.MessageBox.Show("All images have been created, do you want to view the output folder?", "Batch Creation Completed", MessageBoxButton.YesNo);
+
+/*            MessageBoxResult res2 = System.Windows.MessageBox.Show("All images have been created, do you want to view the output folder?", "Batch Creation Completed", MessageBoxButton.YesNo);
             if (res2 == MessageBoxResult.Yes)
             {
                 // open folder
@@ -537,7 +565,7 @@ namespace nametag_tool
                     UseShellExecute = true,
                     Verb = "open"
                 });
-            }
+            }*/
 
             // restore path to original
             exportImagesPath = bck;
@@ -555,6 +583,35 @@ namespace nametag_tool
 
             overlayer.LayoutTransform = new ScaleTransform(scale,scale);
         }
+
+        private void OpenOutputFolderBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (exportImagesPath.Length < 1) return;
+
+            // shell open folder
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+            {
+                FileName = exportImagesPath,
+                UseShellExecute = true,
+                Verb = "open"
+            });
+        }
+
+        private void FitToViewBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // calc optimal size
+            double optimalZoom = calculateOptimalZoom(
+                new Dimension(
+                    overlayer.ImageControl.ActualWidth,
+                    overlayer.ImageControl.ActualHeight),
+                new Dimension(
+                    ImagePreviewBoxScrollContainer.ActualWidth,
+                    ImagePreviewBoxScrollContainer.ActualHeight)
+                );
+
+            // add 1 percent padding on either 
+            zoomSlider.Value = optimalZoom != 1d ? (optimalZoom - .01d) : optimalZoom;
+        }
     }
 
     public class ActionCommand : ICommand {
@@ -566,11 +623,15 @@ namespace nametag_tool
             Action = action;
             Predicate = predicate;
         }
-        public event EventHandler CanExecuteChanged {
-            add {
+
+        public event EventHandler CanExecuteChanged
+        {
+            add
+            {
                 CommandManager.RequerySuggested += value;
             }
-            remove {
+            remove
+            {
                 CommandManager.RequerySuggested -= value;
             }
         }

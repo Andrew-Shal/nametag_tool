@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:nametag_tool"
         mc:Ignorable="d"
         x:Name="Window"
-        Title="NameTag App - version 1.0" Height="540" Width="992" MinWidth="992" MinHeight="540">
+        Title="NameTag App - version 1.0" Height="720" Width="1200" MinWidth="1200" MinHeight="720">
     <Window.Resources>
         <DataTemplate x:Key="ListBoxItemTemplate">
             <Grid MinWidth="300px">
@@ -15,8 +15,6 @@
                     <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="1*"/>
-                    <!--ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/-->
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" HorizontalAlignment="Left" Height="23px" Text="{Binding}" VerticalAlignment="Top"/>
                 <Button Grid.Column="1" HorizontalAlignment="Right"  Width="80" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnRemoveBtnClickCommand}">remove</Button>
@@ -26,7 +24,7 @@
             </Grid>
         </DataTemplate>
     </Window.Resources>
-    <Grid Margin="25">
+    <Grid Margin="20,20,20,20">
         <!--Grid.ContextMenu>
             <ContextMenu>
                 <MenuItem Header="Select Template Image"></MenuItem>
@@ -36,16 +34,17 @@
             <RowDefinition Height="1*"/>
             <RowDefinition Height="2*"/>
             <RowDefinition Height="1*"/>
+            <!--RowDefinition Height=".15*"/-->
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0"  Grid.Column="0">
-            <Button x:Name="selectCsvBtn" Content="Select CSV file" MaxWidth="200" Click="selectCsvBtn_Click"></Button>            
+            <Button x:Name="selectCsvBtn" Content="Select CSV file" MaxWidth="200" Click="selectCsvBtn_Click"></Button>
             <Button x:Name="selectPlaceholderBtn" Content="Select Placeholder Image" MaxWidth="200" Click="selectPlaceholderBtn_Click"></Button>
         </StackPanel>
-        <DockPanel Grid.Row="1" Grid.RowSpan="2"  Grid.Column="0" x:Name="CsvListContainer">
+        <DockPanel Grid.Row="1" Grid.RowSpan="2"  Grid.Column="0" x:Name="CsvListContainer" Margin="0,0,10,0">
             <Grid DockPanel.Dock="Top">
                 <Label x:Name="namesFoundCountLbl" HorizontalAlignment="Left" Content="- names found in csv file"></Label>
                 <Label x:Name="sortByLbl" Width="70px" Margin="0,0,80,0" HorizontalAlignment="Right" VerticalAlignment="Top">sort by:</Label>
@@ -59,84 +58,126 @@
                 <Button x:Name="ExportCurrentCsvBtn" Width="100px" Height="28" Margin="0,26,0,0" HorizontalAlignment="Right" IsEnabled="False" Click="ExportCurrentCsvBtn_Click">Export Csv</Button>
             </Grid>
             <ListBox x:Name="csvNamesListBox" ItemTemplate="{StaticResource ListBoxItemTemplate}"/>
-            
+
         </DockPanel>
         <StackPanel Grid.Row="0" Grid.Column="1">
             <!-- control buttons -->
             <Button x:Name="CreateImageBtn" Content="Create Image" MaxWidth="200" Click="CreateImageBtn_Click"></Button>
-            <Button x:Name="StartBatchCreationBtn" Content="Start Batch Creation" MaxWidth="200" IsEnabled="False" Click="StartBatchCreationBtn_Click"></Button>
+            <Button x:Name="StartBatchCreationBtn" Content="Start Batch Creation" MaxWidth="200" IsEnabled="False" Click="StartBatchCreationBtn_Click"/>
             <!-- dialog should autmatically open once start batch process btn clicked -->
-            <Grid MaxWidth="200">
+            <Grid MaxWidth="300">
                 <Label Content="export output location:" Height="28" HorizontalAlignment="Left" Name="outputFolderPathLabel" VerticalAlignment="Top" />
-                <Button x:Name="OutputFolderBtn" Content="Change" MaxWidth="80" Width="60" Margin="0,26,0,0" HorizontalAlignment="Right" Click="OutputFolderBtn_Click"></Button>
-                <TextBox x:Name="OutputFolderPathInput" IsReadOnly="True" Height="23" MaxWidth="140" Width="140" Margin="0,26,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="{x:Null}"></TextBox>
+                <Button x:Name="OutputFolderBtn" Content="Change" MaxWidth="60" Width="60" Margin="0,26,70,0" HorizontalAlignment="Right" Click="OutputFolderBtn_Click"></Button>
+                <Button x:Name="OpenOutputFolderBtn" Content="Open" MaxWidth="60" Width="60" Margin="0,26,0,0" HorizontalAlignment="Right" Click="OpenOutputFolderBtn_Click"></Button>
+                <TextBox x:Name="OutputFolderPathInput" IsReadOnly="True" Height="23" MaxWidth="160" Width="160" Margin="0,26,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="{x:Null}"></TextBox>
             </Grid>
 
         </StackPanel>
-        <DockPanel Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" x:Name="ImgPreviewCanvasContainer">
+        <DockPanel Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" x:Name="ImgPreviewCanvasContainer" Margin="10,0,0,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
                 <DockPanel Grid.Row="0">
-                    <Grid DockPanel.Dock="Top">
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
                         <Label  Content="Image Preview Box" HorizontalContentAlignment="Left" Margin="0,0,0,0"></Label>
-                        <Slider x:Name="zoomSlider" Orientation="Horizontal" Minimum="0" Maximum="1" SmallChange=".1" LargeChange=".2" Width="150" HorizontalAlignment="Right" Margin="0,3,35,0" ValueChanged="zoomSlider_ValueChanged" />
-                        <Label x:Name="ZoomSliderLabel" Margin="0,0,0,0" HorizontalAlignment="Right" Content="100"/>
+                        <Slider x:Name="zoomSlider" Orientation="Horizontal" Minimum="0" Maximum="1" SmallChange=".1" LargeChange=".2" Width="150" HorizontalAlignment="Right" Margin="0,3,110,0" ValueChanged="zoomSlider_ValueChanged" />
+                        <Label x:Name="ZoomSliderLabel" Margin="0,0,70,0" HorizontalAlignment="Right" Content="-" Width="30" MaxWidth="30"/>
+                        <Button x:Name="FitToViewBtn" Width="60" MaxWidth="60" Margin="0,0,0,0" HorizontalAlignment="Right" Click="FitToViewBtn_Click">Fit to View</Button>
                     </Grid>
                     <!-- Image preview box -->
-                        <!-- addding a simple image box, temporarily -->
-                        <!--Image Grid.Row="1" Grid.Column="0" Source="nametag.jpg"></Image-->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="#FF262626">
+                    <!-- addding a simple image box, temporarily -->
+                    <!--Image Grid.Row="1" Grid.Column="0" Source="nametag.jpg"></Image-->
+                    <ScrollViewer x:Name="ImagePreviewBoxScrollContainer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="#FF262626">
                         <local:ImageOverlayer x:Name="overlayer"  BackgroundImage="nametag.jpg" InSelectionMode="True" Text="hello" />
                     </ScrollViewer>
-                        <!-- create a wpf control -->
-                        <!-- 
+                    <!-- create a wpf control -->
+                    <!-- 
                             this box should be able to load an image, have an overlay rectangle box with some opacity that spans entire image, 
                             a selection cursor that is draggable which creates an overlay box to select a region. this is triggered on mouse down up to mouse release.
                             once box is created on image, allow to add various existing controls to the selected section. for now we will only focus on the text box.
                         -->
                 </DockPanel>
-                <DockPanel Grid.Row="1">
+                <StackPanel Grid.Row="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Grid.Row="1" Margin="20,10,20,10">
+                            <Grid>
+                                <Label Content="enter text:" Height="28" HorizontalAlignment="Left" Name="enterTextLabel" VerticalAlignment="Top" />
+                                <TextBox x:Name="placeholderTextInput"  Height="23" Margin="0,26,0,0" VerticalAlignment="Top" Text="Placeholder Name" TextChanged="placeholderTextInput_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid>
+                                <Label Content="select font size:" Height="28" HorizontalAlignment="Left" Name="selectFontSizeLabel" VerticalAlignment="Top" />
+                                <wpfTool:DoubleUpDown x:Name="FontSizeCombo" FormatString="N2" Watermark="Font Size" Increment=".5" Height="23" VerticalAlignment="Top" ValueChanged="FontSizeCombo_ValueChanged" Margin="0,26,0,0" />
+                            </Grid>
+                            <Grid>
+                                <Label x:Name="toggleSelectionAreaVisibilityLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Toggle selection area visibility</Label>
+                                <CheckBox x:Name="IsSelectionAreaVisibleCbx" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" IsChecked="{x:Null}" Click="IsSelectionAreaVisibleCbx_Click"/>
+                            </Grid>
+                            <Grid>
+                                <Label x:Name="setHorizontalTextAlignmentLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Set Horizontal Text Alignment:</Label>
+                                <ComboBox x:Name="HotizontalTextAlignmentCbx" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" SelectionChanged="HotizontalTextAlignmentCbx_SelectionChanged" />
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Grid.Row="1" Margin="20,10,20,10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="80*"/>
+                                    <RowDefinition Height="93*"/>
+                                </Grid.RowDefinitions>
+                                <Label Content="select font:" Height="28" HorizontalAlignment="Left" Name="selectFontLabel" VerticalAlignment="Top" />
+                                <ComboBox x:Name="FontFamilyCombo" Height="23" VerticalAlignment="Top" Margin="0,26,0,0"   ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}" SelectionChanged="FontFamilyCombo_SelectionChanged"/>
+                            </Grid>
+                            <Grid>
+                                <Label x:Name="selectFontColorLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Select Background Color</Label>
+                                <wpfTool:ColorPicker x:Name="backgroundColorPickerControl" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" SelectedColorChanged="backgroundColorPickerControl_SelectedColorChanged"></wpfTool:ColorPicker>
+                            </Grid>
+                            <Grid>
+                                <Label x:Name="selectTextLineHeightLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Set Line Height:</Label>
+                                <wpfTool:DoubleUpDown x:Name="TextLineHeightCbx" FormatString="N2" Watermark="Line Height" Increment=".2" Height="23" VerticalAlignment="Top" ValueChanged="TextLineHeightCbx_ValueChanged" Margin="0,26,0,0" />
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="25*"/>
+                                    <ColumnDefinition Width="98*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label x:Name="setVerticalTextAlignmentLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2">Set Vertical Text Alignment:</Label>
+                                <ComboBox x:Name="VeticalTextAlignmentCbx" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" SelectionChanged="VeticalTextAlignmentCbx_SelectionChanged" Grid.ColumnSpan="2" />
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                     <!-- on text change, update text in preview box -->
-                    <Grid>
-                        <Label Content="enter text:" Height="28" HorizontalAlignment="Left" Name="enterTextLabel" VerticalAlignment="Top" />
-                        <TextBox x:Name="placeholderTextInput"  Height="23" Margin="0,26,0,0" VerticalAlignment="Top" Text="Placeholder Name" TextChanged="placeholderTextInput_TextChanged"></TextBox>
-                    </Grid>
-                    <Grid>
-                        <Label Content="select font:" Height="28" HorizontalAlignment="Left" Name="selectFontLabel" VerticalAlignment="Top" />
-                        <ComboBox x:Name="FontFamilyCombo" Height="23" VerticalAlignment="Top" Margin="0,26,0,0"  ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}" SelectionChanged="FontFamilyCombo_SelectionChanged"/>
-                    </Grid>
-                    <Grid>
-                        <Label Content="select font size:" Height="28" HorizontalAlignment="Left" Name="selectFontSizeLabel" VerticalAlignment="Top" />
-                        <wpfTool:DoubleUpDown x:Name="FontSizeCombo" FormatString="N2" Watermark="Font Size" Increment=".5" Value="16" Height="23" VerticalAlignment="Top" ValueChanged="FontSizeCombo_ValueChanged" Margin="0,26,0,0" />
-                        <!--ComboBox x:Name="FontSizeCombo" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" IsEditable="True" SelectionChanged="FontSizeCombo_SelectionChanged" /-->
-                    </Grid>
-                    <Grid>
-                        <Label x:Name="selectFontColorLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Select Background Color</Label>
-                        <wpfTool:ColorPicker x:Name="backgroundColorPickerControl" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" SelectedColorChanged="backgroundColorPickerControl_SelectedColorChanged"></wpfTool:ColorPicker>
-                    </Grid>
-                    <Grid>
-                        <Label x:Name="toggleSelectionAreaVisibilityLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Toggle selection area visibility</Label>
-                        <CheckBox x:Name="IsSelectionAreaVisibleCbx" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" IsChecked="{x:Null}" Click="IsSelectionAreaVisibleCbx_Click"/>
-                    </Grid>
-                    <Grid>
-                        <Label x:Name="selectTextLineHeightLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Set Line Height:</Label>
-                        <wpfTool:DoubleUpDown x:Name="TextLineHeightCbx" FormatString="N2" Watermark="Line Height" Increment=".2" Value="18" Height="23" VerticalAlignment="Top" ValueChanged="TextLineHeightCbx_ValueChanged" Margin="0,26,0,0" />
-                    </Grid>
-                    <Grid>
-                        <Label x:Name="setHorizontalTextAlignmentLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Set Horizontal Text Alignment:</Label>
-                        <ComboBox x:Name="HotizontalTextAlignmentCbx" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" SelectionChanged="HotizontalTextAlignmentCbx_SelectionChanged" />
-                    </Grid>
-                    <Grid>
-                        <Label x:Name="setVerticalTextAlignmentLabel" Height="28" HorizontalAlignment="Left" VerticalAlignment="Top">Set Vertical Text Alignment:</Label>
-                        <ComboBox x:Name="VeticalTextAlignmentCbx" Height="23" VerticalAlignment="Top" Margin="0,26,0,0" SelectionChanged="VeticalTextAlignmentCbx_SelectionChanged" />
-                    </Grid>
-
-                </DockPanel>
+                </StackPanel>
             </Grid>
         </DockPanel>
-        
+        <!--DockPanel Grid.Row="3" Grid.ColumnSpan="2">
+            <StatusBar DockPanel.Dock="Bottom">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+                <StatusBarItem Grid.Column="0">
+                    <TextBlock x:Name="GenericStatusLabel" Text="" />
+                </StatusBarItem>
+                <Separator Grid.Column="1" />
+                <StatusBarItem Grid.Column="2">
+                    <ProgressBar Value="50" Width="90" Height="16" />
+                </StatusBarItem>
+            </StatusBar>
+        </DockPanel-->
     </Grid>
 </Window>

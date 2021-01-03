@@ -185,6 +185,7 @@ namespace nametag_tool
             //Capture the mouse
             if (!RectangleControl.IsMouseCaptured)
                 RectangleControl.CaptureMouse();
+
         }
 
         public void RectangleControl_MouseLeave(object sender, MouseEventArgs e)
@@ -218,6 +219,8 @@ namespace nametag_tool
             // check if it was an event from the rectangle child
             if (!(e.OriginalSource is Rectangle))
             {
+                var bckSaveOriginalPos = startDrag;
+
                 //Set the start point
                 startDrag = e.GetPosition(CanvasControl);
                 //Move the selection marquee on top of all other objects in canvas
@@ -297,6 +300,14 @@ namespace nametag_tool
                     if (RectangleControl.Visibility == Visibility.Hidden)
                         RectangleControl.Visibility = Visibility.Visible;
 
+                    HitTestResult result = VisualTreeHelper.HitTest(ImageControl, currentPoint);
+                    if (result == null)
+                    {
+                        RectangleControl.Visibility = Visibility.Hidden;
+                        textTest.Text = "";
+                        return;
+                    }
+
                     //Move the rectangle to proper place
                     RectangleControl.RenderTransform = new TranslateTransform(x, y);
                     //Set its size
@@ -322,5 +333,4 @@ namespace nametag_tool
             }
         }
     }
-
 }
