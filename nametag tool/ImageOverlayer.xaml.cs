@@ -25,6 +25,7 @@ namespace nametag_tool
         private Point startDrag;
 
         private Point startMoveDrag;
+        private Point startMoveDrag2;
 
         private bool invalid_bounds = false;
 
@@ -127,67 +128,6 @@ namespace nametag_tool
             // add eventhandler
             RectangleControl.MouseEnter += RectangleControl_MouseEnter;
             RectangleControl.MouseLeave += RectangleControl_MouseLeave;
-            RectangleControl.MouseDown += RectangleControl_MouseDown;
-            RectangleControl.MouseMove += RectangleControl_MouseMove;
-            RectangleControl.MouseUp += RectangleControl_MouseUp;
-        }
-
-        public void RectangleControl_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (RectangleControl.IsMouseCaptured)
-                RectangleControl.ReleaseMouseCapture();
-
-            updateSelectionArea();
-            RectangleControl.Visibility = Visibility.Visible;
-
-            Canvas.SetZIndex(RectangleControl, CanvasControl.Children.Count);
-            Canvas.SetZIndex(TextContainer, CanvasControl.Children.Count - 1);
-            Canvas.SetZIndex(ImageControl, 0);
-
-            MessageBox.Show($"{RectangleControl.Height}, {RectangleControl.Width}");
-            MessageBox.Show($"{Canvas.GetTop(RectangleControl)}, {Canvas.GetLeft(RectangleControl)}");
-        }
-
-        public void RectangleControl_MouseMove(object sender, MouseEventArgs e)
-        {
-
-            if (RectangleControl.IsMouseCaptured)
-            {
-                Point currentPoint = e.GetPosition(RectangleControl);
-
-                /// get original top,left position
-                var top = Canvas.GetTop(RectangleControl);
-                var left = Canvas.GetLeft(RectangleControl);
-
-                // calculate the offset of original startMoveDrag to current mousepos, then add to top,left
-
-                if (RectangleControl.Visibility == Visibility.Hidden)
-                    RectangleControl.Visibility = Visibility.Visible;
-
-                // get the difference
-                var offsetTop = top + (startMoveDrag.Y - currentPoint.Y);
-                var offsetLeft = left + (startMoveDrag.X - currentPoint.X);
-                // MessageBox.Show($"{offsetLeft}, {offsetTop}");
-
-                //Move the rectangle to proper place
-                RectangleControl.RenderTransform = new TranslateTransform(offsetLeft, offsetTop);
-            }
-        }
-
-        public void RectangleControl_MouseDown(object sender, MouseEventArgs e)
-        {
-            // get x,y position of top,left of rectangle
-            //Set the start point
-            // startMoveDrag = e.GetPosition(CanvasControl);
-            var rectTop = RectangleControl.RenderTransform.Value.OffsetY;
-            var rectLeft = RectangleControl.RenderTransform.Value.OffsetX;
-
-            startMoveDrag = new Point(rectLeft, rectTop);
-
-            //Capture the mouse
-            if (!RectangleControl.IsMouseCaptured)
-                RectangleControl.CaptureMouse();
-
         }
 
         public void RectangleControl_MouseLeave(object sender, MouseEventArgs e)
@@ -221,8 +161,6 @@ namespace nametag_tool
             // check if it was an event from the rectangle child
             if (!(e.OriginalSource is Rectangle))
             {
-                var bckSaveOriginalPos = startDrag;
-
                 //Set the start point
                 startDrag = e.GetPosition(CanvasControl);
                 //Move the selection marquee on top of all other objects in canvas
@@ -233,6 +171,17 @@ namespace nametag_tool
                 //Capture the mouse
                 if (!CanvasControl.IsMouseCaptured)
                     CanvasControl.CaptureMouse();
+            }
+            if(e.OriginalSource is Rectangle){
+                startMoveDrag = e.GetPosition(RectangleControl);
+                startMoveDrag2 = e.GetPosition(CanvasControl);
+
+                Canvas.SetZIndex(RectangleControl, CanvasControl.Children.Count);
+                Canvas.SetZIndex(TextContainer, CanvasControl.Children.Count - 1);
+                Canvas.SetZIndex(ImageControl, 0);
+                //Capture the mouse
+                if (!RectangleControl.IsMouseCaptured)
+                    RectangleControl.CaptureMouse();
             }
 
         }
@@ -250,7 +199,9 @@ namespace nametag_tool
             //Release the mouse
             if (CanvasControl.IsMouseCaptured)
                 CanvasControl.ReleaseMouseCapture();
-            // CanvasControl.Cursor = Cursors.Arrow;
+
+            if (RectangleControl.IsMouseCaptured)
+                RectangleControl.ReleaseMouseCapture();
 
             // canvas.UpdateLayout();
             var left = RectangleControl.RenderTransform.Value.OffsetX;
@@ -258,9 +209,6 @@ namespace nametag_tool
 
             var rw = RectangleControl.Width;
             var rh = RectangleControl.Height;
-
-            // var xCenter = left + rw / 2;
-            // var yCenter = top + rh / 2;
 
             TextContainer.Width = rw;
             TextContainer.Height = rh;
@@ -284,10 +232,13 @@ namespace nametag_tool
 
         private void CanvasControl_MouseUp(object sender, MouseButtonEventArgs e)
         {
-
             if (!InSelectionMode) return;
 
             if (!(e.OriginalSource is Rectangle))
+            {
+                updateSelectionArea();
+            }
+            if ((e.OriginalSource is Rectangle))
             {
                 updateSelectionArea();
             }
@@ -323,6 +274,49 @@ namespace nametag_tool
                     //Set its size
                     RectangleControl.Width = Math.Abs(e.GetPosition(CanvasControl).X - startDrag.X);
                     RectangleControl.Height = Math.Abs(e.GetPosition(CanvasControl).Y - startDrag.Y);
+                }
+            }
+
+
+            if ((e.OriginalSource is Rectangle))
+            {
+                if (RectangleControl.IsMouseCaptured)
+                {
+                    Point currentPoint = e.GetPosition(CanvasControl);
+
+                    Point currentPoint2 = e.GetPosition(RectangleControl);
+
+                    //Calculate the top left corner of the rectangle 
+                    //regardless of drag direction
+                    double x = currentPoint.X - startMoveDrag.X;
+                    double y = currentPoint.Y - startMoveDrag.Y;
+
+                    if (RectangleControl.Visibility == Visibility.Hidden)
+                        RectangleControl.Visibility = Visibility.Visible;
+
+                    UIElement container = VisualTreeHelper.GetParent(CanvasControl) as UIElement;
+                    Point relativeLocationTopLeft = RectangleControl.TranslatePoint(new Point(0, 0), container);
+
+                    double w = VisualTreeHelper.GetContentBounds(RectangleControl).Width;
+                    double h = VisualTreeHelper.GetContentBounds(RectangleControl).Height;
+
+                    Point relativeLocationBottomRight = new Point(relativeLocationTopLeft.X + w, relativeLocationTopLeft.Y + h);
+
+
+                    HitTestResult topLeftTest = VisualTreeHelper.HitTest(ImageControl, relativeLocationTopLeft);
+                    HitTestResult bottomRightTest = VisualTreeHelper.HitTest(ImageControl, relativeLocationBottomRight);
+                    if (topLeftTest == null || bottomRightTest == null)
+                    {
+                        // was to set rectangle back to original position
+                        var originalX = startMoveDrag2.X - currentPoint2.X;
+                        var originalY = startMoveDrag2.Y - currentPoint2.Y;
+                        RectangleControl.RenderTransform = new TranslateTransform(originalX, originalY);
+                        RectangleControl.ReleaseMouseCapture();
+                        return;
+                    }
+
+                    //Move the rectangle to new location
+                    RectangleControl.RenderTransform = new TranslateTransform(x, y);
                 }
             }
         }
