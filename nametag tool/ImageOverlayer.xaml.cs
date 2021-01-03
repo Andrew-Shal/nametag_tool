@@ -26,6 +26,8 @@ namespace nametag_tool
 
         private Point startMoveDrag;
 
+        private bool invalid_bounds = false;
+
         // Font properties
         public static DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(ImageOverlayer), new PropertyMetadata("Placeholder"));
         public string Text
@@ -265,8 +267,17 @@ namespace nametag_tool
 
             textTest.FontWeight = FontWeight.FromOpenTypeWeight(700);
 
-            // set text to visible
-            textTest.Visibility = Visibility.Visible;
+            if (!invalid_bounds)
+            {
+                // set text to visible
+                textTest.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                textTest.Visibility = Visibility.Hidden;
+                RectangleControl.Visibility = Visibility.Hidden;
+            }
+            invalid_bounds = false;
 
             TextContainer.RenderTransform = new TranslateTransform(left, top);
         }
@@ -303,8 +314,7 @@ namespace nametag_tool
                     HitTestResult result = VisualTreeHelper.HitTest(ImageControl, currentPoint);
                     if (result == null)
                     {
-                        RectangleControl.Visibility = Visibility.Hidden;
-                        textTest.Text = "";
+                        invalid_bounds = true;
                         return;
                     }
 
