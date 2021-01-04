@@ -27,9 +27,12 @@ namespace nametag_tool
         // 
         public ICommand OnRemoveBtnClickCommand { get; set; }
         public ICommand OnPreviewBtnClickCommand { get; set; }
+        public ICommand OnUpdateBtnClickCommand { get; set; }
+        public ICommand OnEditBtnClickCommand { get; set; }
+        public ICommand OnCancelBtnClickCommand { get; set; }
 
         //
-        ObservableCollection<string> names = new ObservableCollection<string>();
+        ObservableCollection<NameDataModel> names = new ObservableCollection<NameDataModel>();
 
         // 
         public string exportImagesPath = "";
@@ -37,14 +40,11 @@ namespace nametag_tool
         // will append dynamic dates to folder outputs
         public const string DEFAULT_DIR_NAME = "nametag_exports - ";
 
-
         public MainWindow()
         {
             InitializeComponent();
 
-            OnRemoveBtnClickCommand = new ActionCommand(x => { names.Remove(x.ToString()); /* clear text that is in preview if it was the removed item*/ if (x.ToString() == placeholderTextInput.Text) { placeholderTextInput.Clear(); } });
-
-            OnPreviewBtnClickCommand = new ActionCommand(x => { if (!overlayer.textTest.IsVisible) { System.Windows.MessageBox.Show("Select an area on the preview canvas");return; } overlayer.Text = x.ToString(); placeholderTextInput.Text = x.ToString(); csvNamesListBox.SelectedValue = x; });
+            setActionCommands();
 
             sortByCbx.ItemsSource = Enum.GetValues(typeof(OrderBy));
 
@@ -61,6 +61,120 @@ namespace nametag_tool
             backgroundColorPickerControl.SelectedColor = Colors.Black;
             zoomSlider.Value = .26; // hard code optimal size for default image in image preview control
         }
+
+        public void setActionCommands() { 
+            OnRemoveBtnClickCommand = new ActionCommand(x => {
+                NameDataModel nameModel = x as NameDataModel;
+                names.Remove(nameModel); 
+                /* clear text that is in preview if it was the removed item*/ 
+                if (nameModel.Name.ToString() == placeholderTextInput.Text) {
+                    placeholderTextInput.Clear(); 
+                } 
+            });
+
+            OnPreviewBtnClickCommand = new ActionCommand(x => {
+                NameDataModel nameModel = x as NameDataModel;
+                if (!overlayer.textTest.IsVisible) { 
+                    System.Windows.MessageBox.Show("Select an area on the preview canvas");
+                    return; 
+                } 
+                overlayer.Text = nameModel.Name.ToString(); 
+                placeholderTextInput.Text = nameModel.Name.ToString(); 
+                csvNamesListBox.SelectedItem = nameModel; 
+            });
+
+            OnEditBtnClickCommand = new ActionCommand(x => {
+                // we want to show the input box and update button for this item
+                NameDataModel nameModel = x as NameDataModel;
+                // Getting idx of listbox item currently selected
+                var idx = csvNamesListBox.Items.IndexOf(nameModel);
+                ListBoxItem lbiAtIdx = csvNamesListBox.ItemContainerGenerator.ContainerFromIndex(idx) as ListBoxItem;
+                // Getting the ContentPresenter of ListBoxItem at Index
+                ContentPresenter contentPresenter = Utility.FindVisualChild<ContentPresenter>(lbiAtIdx);
+                // Finding editBoxGroup from the DataTemplate that is set on that ContentPresenter
+                DataTemplate dataTemplate = contentPresenter.ContentTemplate;
+                
+                Grid editBoxGroup = (Grid)dataTemplate.FindName("editBoxGroup", contentPresenter);
+                Button editBtn = (Button)dataTemplate.FindName("toggleEditContainerBtn", contentPresenter);
+                TextBox editTextBox = (TextBox)dataTemplate.FindName("textBox", contentPresenter);
+
+                // set text box to name value
+                editTextBox.Text = nameModel.Name;
+
+                // set to false, since we are already editing
+                editBtn.IsEnabled = false;
+
+                // show it
+                editBoxGroup.Visibility = Visibility.Visible;
+            });
+
+            OnCancelBtnClickCommand = new ActionCommand(x =>
+            {
+                NameDataModel nameModel = x as NameDataModel;
+                // Getting idx of listbox item currently selected
+                var idx = csvNamesListBox.Items.IndexOf(nameModel);
+                ListBoxItem lbiAtIdx = csvNamesListBox.ItemContainerGenerator.ContainerFromIndex(idx) as ListBoxItem;
+                // Getting the ContentPresenter of ListBoxItem at Index
+                ContentPresenter contentPresenter = Utility.FindVisualChild<ContentPresenter>(lbiAtIdx);
+                // Finding textbox from the DataTemplate that is set on that ContentPresenter
+                DataTemplate dataTemplate = contentPresenter.ContentTemplate;
+               
+                Grid editBoxGroup = (Grid)dataTemplate.FindName("editBoxGroup", contentPresenter);
+                Button editBtn = (Button)dataTemplate.FindName("toggleEditContainerBtn", contentPresenter);
+
+                // re-enable edit button and hide edit container
+                editBtn.IsEnabled = true;
+                editBoxGroup.Visibility = Visibility.Hidden;
+            });
+
+            OnUpdateBtnClickCommand = new ActionCommand(x => {
+                NameDataModel nameModel = x as NameDataModel;
+                // Getting idx of listbox item currently selected
+                var idx = csvNamesListBox.Items.IndexOf(nameModel);
+                ListBoxItem lbiAtIdx = csvNamesListBox.ItemContainerGenerator.ContainerFromIndex(idx) as ListBoxItem;
+                // Getting the ContentPresenter of ListBoxItem at Index
+                ContentPresenter contentPresenter = Utility.FindVisualChild<ContentPresenter>(lbiAtIdx);
+                // Finding textbox from the DataTemplate that is set on that ContentPresenter
+                DataTemplate dataTemplate = contentPresenter.ContentTemplate;
+                
+                Grid editBoxGroup = (Grid)dataTemplate.FindName("editBoxGroup", contentPresenter);
+                Button editBtn = (Button)dataTemplate.FindName("toggleEditContainerBtn", contentPresenter);
+                TextBox editTextBox = (TextBox)dataTemplate.FindName("textBox", contentPresenter);
+
+                // re-enable edit button and hide edit container
+                editBtn.IsEnabled = true;
+                editBoxGroup.Visibility = Visibility.Hidden;
+
+                // getting idx of current item being looked at in the actual data model
+                int nameDataModelIdx = names.IndexOf(nameModel);
+
+                // update the data model entry with new name model instance, copying same values from old instance
+                names[nameDataModelIdx] = new NameDataModel(nameModel.Id, editTextBox.Text.Trim());
+
+                #region defferred functionality
+                /*
+                var t = "";
+                foreach (NameDataModel na in names) {
+                    t += $"{na.Name}, {Environment.NewLine}";
+                }
+                System.Windows.MessageBox.Show(t);
+                */
+                /*
+                 * Defferred, binding the name in xaml updates the data source item
+                 * 
+                // getting idx of current item being looked at in the actual data model
+                int nameDataModelIdx = names.IndexOf(nameModel);
+
+                // update the name for the current data model
+                nameModel.Name = myTextBox.Text.Trim();
+
+                // update the data model entry where they match
+                names[nameDataModelIdx] = nameModel;
+                */
+                #endregion
+            });
+        }
+
 
         private void Names_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -87,57 +201,35 @@ namespace nametag_tool
             selectCsvDialog.Multiselect = false;
             selectCsvDialog.Filter = "Comma Separated|*.txt";
 
-            if (selectCsvDialog.ShowDialog() == true) {
-                // parse csv
-                
-                var fileContent = string.Empty;
-                fileContent = System.IO.File.ReadAllText(selectCsvDialog.FileName);
+            if (selectCsvDialog.ShowDialog() != true) return;
 
-                var namesArr = fileContent.Split(',');
+            // parse csv
+            var fileContent = File.ReadAllText(selectCsvDialog.FileName);
+            string[] namesArr = parseFile(fileContent, ',');
 
-                // set names count label
-                namesFoundCountLbl.Content = $"{namesArr.Length} name(s) found in csv file";
+            buildNamesModel(namesArr);
+            updateNameCount(names.Count,0);
 
-                // save csv items in data structure
-                for (var i = 0; i < namesArr.Length; i++) {
-                    if(namesArr[i].Trim().Length > 0)
-                    {
-                        names.Add(namesArr[i].Trim());
-                    }
-                }
-
-                // set datasource for view listbox
-                csvNamesListBox.ItemsSource = names;
-            }
+            // set datasource for view listbox
+            csvNamesListBox.ItemsSource = names;
         }
 
-        public class Dimension
+        public void buildNamesModel(string[] namesArr)
         {
-            public double Width{get;set;}
-            public double Height { get; set; }
-            public Dimension(double width, double height)
-            {
-                Width = width;
-                Height = height;
-            }
+            for (int i = 0; i < namesArr.Length; i++) names.Add(new NameDataModel(i, namesArr[i]));
         }
 
-        // return a double value ( x > 0, x <= 1 )
-        // optimal_width = (100 / (img_width / container_width)) / 100
-        // optimal_height = (100 / (img_height / container_height)) / 100
-        private double calculateOptimalZoom(Dimension imageDimension, Dimension containerDimension)
+        public void updateNameCount(int fileLoadedCount, int nameAddedCount)
         {
-            // only if height or width of image is larger than its container
-            if(imageDimension.Height > containerDimension.Height || imageDimension.Width > containerDimension.Width)
-            {
-                // do both calculations and test which is the smaller
-                var eq1 = (100 / (imageDimension.Width / containerDimension.Width)) / 100;
-                var eq2 = (100 / (imageDimension.Height / containerDimension.Height)) / 100;
+            var output = "";
+            output += fileLoadedCount > 1 ? $"{ fileLoadedCount} - csv file | " : "";
+            output += nameAddedCount > 1  ? $"{nameAddedCount} - manually added | " : "";
+            output += fileLoadedCount > 1 && nameAddedCount > 1 ? $"{fileLoadedCount + nameAddedCount} - Total" : "";
+            namesFoundCountLbl.Content = output;
+        }
 
-                return eq1 <= eq2 ? eq1 : eq2;
-            }
-            // image is smaller than it's parent container, return full size 100%
-            return 1d;
+        public string[] parseFile(string content, char parseBy) {
+            return content.Split(parseBy).Where(i => i.Trim().Length > 1).Select(j => j.Trim()).ToArray();
         }
 
         private void selectPlaceholderBtn_Click(object sender, RoutedEventArgs e)
@@ -157,7 +249,7 @@ namespace nametag_tool
                 overlayer.updateSelectionArea();
 
                 // height or width is not needed since it is being mapped to a silder with a single value
-                double optimalZoom = calculateOptimalZoom(
+                double optimalZoom = Dimension.calculateOptimalZoom(
                     new Dimension(
                         overlayer.ImageControl.ActualWidth,
                         overlayer.ImageControl.ActualHeight),
@@ -175,39 +267,6 @@ namespace nametag_tool
         {
             TextBox elem = (TextBox)sender;
             overlayer.Text = elem.Text;
-        }
-
-        public enum OrderBy { 
-            nameDesc,
-            nameAsc,
-            nameLengthAsc,
-            nameLengthDesc
-        }
-
-        // utility
-        public static ObservableCollection<string> OrderThoseGroups(ObservableCollection<string> orderThoseGroups,OrderBy orderBy)
-        {
-            ObservableCollection<string> temp = orderThoseGroups;
-
-            switch (orderBy)
-            {
-                case OrderBy.nameAsc:
-                    temp = new ObservableCollection<string>(orderThoseGroups.OrderBy(p => p));
-                    break;
-                case OrderBy.nameDesc:
-                    temp = new ObservableCollection<string>(orderThoseGroups.OrderByDescending(p => p));
-                    break;
-                case OrderBy.nameLengthAsc:
-                    temp = new ObservableCollection<string>(orderThoseGroups.OrderBy(p => p.Length));
-                    break;
-                case OrderBy.nameLengthDesc:
-                    temp = new ObservableCollection<string>(orderThoseGroups.OrderByDescending(p => p.Length));
-                    break;
-            }
-
-            orderThoseGroups.Clear();
-            foreach (string j in temp) orderThoseGroups.Add(j);
-            return orderThoseGroups;
         }
 
         private void FontFamilyCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -256,7 +315,7 @@ namespace nametag_tool
             OrderBy sortOrder;
 
             Enum.TryParse<OrderBy>(cb.SelectedValue.ToString(), out sortOrder);
-            names = OrderThoseGroups(names, sortOrder);
+            names = Utility.SortNameCollection(names, sortOrder);
         }
 
         private void TextLineHeightCbx_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -298,7 +357,7 @@ namespace nametag_tool
             if (AddNewNameInp.Text.Trim().Length < 1) return;
 
             // add new name to names obj
-            names.Add(AddNewNameInp.Text.Trim());
+            names.Add(new NameDataModel(names.Count + 1, AddNewNameInp.Text.Trim()));
 
             // assume they havent added a list
             if(csvNamesListBox.Items.Count < 1)
@@ -334,9 +393,9 @@ namespace nametag_tool
 
                 using (System.IO.StreamWriter file = new System.IO.StreamWriter(sfile))
                 {
-                    foreach (string name in names)
+                    foreach (NameDataModel name in names)
                     {
-                            file.WriteLine(name+",");
+                            file.WriteLine(name.Name+",");
                     }
                     // when done, open folder
                     MessageBoxResult res2 = System.Windows.MessageBox.Show("export completed, do you want to open the folder?", "Open Folder", MessageBoxButton.YesNo);
@@ -448,7 +507,6 @@ namespace nametag_tool
             // call export to png, since it is the single image button we just export what is currently on the canvas
             ExportToPng(new Uri(fullFilePath), overlayer.CanvasControl);
 
-
             // when done, open folder
             MessageBoxResult res3 = System.Windows.MessageBox.Show("Image Created, do you want to open the folder?", "Open Folder", MessageBoxButton.YesNo);
             if (res3 == MessageBoxResult.Yes)
@@ -549,7 +607,7 @@ namespace nametag_tool
             var bck = exportImagesPath;
             exportImagesPath = dirFullPath;
 
-            ProgressBarWindow progressBarWindow = new ProgressBarWindow(overlayer,dirFullPath,names.ToList());
+            ProgressBarWindow progressBarWindow = new ProgressBarWindow(overlayer,dirFullPath,(from name in names select name.Name).ToList());
             progressBarWindow.Owner = GetWindow(this);
             progressBarWindow.ShowDialog();
 
@@ -600,7 +658,7 @@ namespace nametag_tool
         private void FitToViewBtn_Click(object sender, RoutedEventArgs e)
         {
             // calc optimal size
-            double optimalZoom = calculateOptimalZoom(
+            double optimalZoom = Dimension.calculateOptimalZoom(
                 new Dimension(
                     overlayer.ImageControl.ActualWidth,
                     overlayer.ImageControl.ActualHeight),

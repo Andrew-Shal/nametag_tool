@@ -77,6 +77,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Dimension.cs" />
+    <Compile Include="Utility.cs" />
     <Page Include="ImageOverlayer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -103,6 +105,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ItemDataModel.cs" />
+    <Compile Include="NameDataModel.cs" />
+    <Compile Include="OrderBy.cs" />
     <Compile Include="ProgressBarWindow.xaml.cs">
       <DependentUpon>ProgressBarWindow.xaml</DependentUpon>
     </Compile>

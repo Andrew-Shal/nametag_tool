@@ -30,11 +30,19 @@ namespace nametag_tool
         private bool invalid_bounds = false;
 
         // Font properties
-        public static DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(ImageOverlayer), new PropertyMetadata("Placeholder"));
+        public static DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(ImageOverlayer), new PropertyMetadata("[Enter Text]"));
         public string Text
         {
             get { return (string)GetValue(TextProperty); }
-            set { this.SetValue(TextProperty, value); }
+            set {
+                if(value.Trim() == "")
+                {
+                    this.SetValue(TextProperty,"[Enter Text]");
+                    return;
+                }
+                this.SetValue(TextProperty, value); 
+            
+            }
         }
 
         public static DependencyProperty TextFontColorProperty = DependencyProperty.Register("TextFontColor", typeof(SolidColorBrush), typeof(ImageOverlayer), new PropertyMetadata(new SolidColorBrush(Colors.Black)));
@@ -44,7 +52,7 @@ namespace nametag_tool
             set { this.SetValue(TextFontColorProperty, value); }
         }
 
-        public static DependencyProperty TextFontSizeProperty = DependencyProperty.Register("TextFontSize", typeof(double), typeof(ImageOverlayer), new PropertyMetadata(20.00));
+        public static DependencyProperty TextFontSizeProperty = DependencyProperty.Register("TextFontSize", typeof(double), typeof(ImageOverlayer), new PropertyMetadata(80.00));
         public double TextFontSize
         {
             get { return (double)GetValue(TextFontSizeProperty); }
@@ -128,6 +136,7 @@ namespace nametag_tool
             // add eventhandler
             RectangleControl.MouseEnter += RectangleControl_MouseEnter;
             RectangleControl.MouseLeave += RectangleControl_MouseLeave;
+
         }
 
         public void RectangleControl_MouseLeave(object sender, MouseEventArgs e)
@@ -165,8 +174,6 @@ namespace nametag_tool
                 startDrag = e.GetPosition(CanvasControl);
                 //Move the selection marquee on top of all other objects in canvas
                 Canvas.SetZIndex(RectangleControl, CanvasControl.Children.Count);
-                Canvas.SetZIndex(TextContainer, CanvasControl.Children.Count - 1);
-                Canvas.SetZIndex(ImageControl, 0);
 
                 //Capture the mouse
                 if (!CanvasControl.IsMouseCaptured)
@@ -176,9 +183,6 @@ namespace nametag_tool
                 startMoveDrag = e.GetPosition(RectangleControl);
                 startMoveDrag2 = e.GetPosition(CanvasControl);
 
-                Canvas.SetZIndex(RectangleControl, CanvasControl.Children.Count);
-                Canvas.SetZIndex(TextContainer, CanvasControl.Children.Count - 1);
-                Canvas.SetZIndex(ImageControl, 0);
                 //Capture the mouse
                 if (!RectangleControl.IsMouseCaptured)
                     RectangleControl.CaptureMouse();
@@ -236,6 +240,10 @@ namespace nametag_tool
 
             if (!(e.OriginalSource is Rectangle))
             {
+                //Move the selection marquee on top of all other objects in canvas
+                Canvas.SetZIndex(RectangleControl, CanvasControl.Children.Count);
+                Canvas.SetZIndex(TextContainer, CanvasControl.Children.Count - 1);
+                Canvas.SetZIndex(ImageControl, 0);
                 updateSelectionArea();
             }
             if ((e.OriginalSource is Rectangle))

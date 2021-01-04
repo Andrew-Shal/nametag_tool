@@ -12,15 +12,26 @@
         <DataTemplate x:Key="ListBoxItemTemplate">
             <Grid MinWidth="300px">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*" MinWidth="100px"/>
+                    <ColumnDefinition Width="60px"/>
+                    <ColumnDefinition Width="60px"/>
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" HorizontalAlignment="Left" Height="23px" Text="{Binding}" VerticalAlignment="Top"/>
-                <Button Grid.Column="1" HorizontalAlignment="Right"  Width="80" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnRemoveBtnClickCommand}">remove</Button>
-                <Button Grid.Column="2" HorizontalAlignment="Right"  Width="80" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnPreviewBtnClickCommand}">preview</Button>
-                <!--Button Grid.Column="3" HorizontalAlignment="Right"  Width="80" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnEditBtnClickCommand}">edit</>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23px" Width="80" VerticalAlignment="Top"></TextBox-->
+                <TextBlock Grid.Column="0" Margin="5,0,5,0" HorizontalAlignment="Left" Height="23px" Text="{Binding Name}" VerticalAlignment="Top"/>
+                <Button Grid.Column="1"  Margin="5,0,5,0"  Width="auto" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnPreviewBtnClickCommand}">preview</Button>
+                <Button Grid.Column="2"  Margin="5,0,5,0"  Width="auto" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnEditBtnClickCommand}" Name="toggleEditContainerBtn">edit</Button>
+                <Grid Grid.Column="3" Name="editBoxGroup" Visibility="Hidden">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="80px" MaxWidth="200" Width="auto"/>
+                        <ColumnDefinition Width="70px"/>
+                        <ColumnDefinition Width="70px"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <wpfTool:WatermarkTextBox Grid.Column="0" Margin="5,0,5,0" Name="textBox" Watermark="enter updated name" Height="23px" Width="auto"></wpfTool:WatermarkTextBox>
+                    <Button Grid.Column="1"  Width="auto" Margin="5,0,5,0" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnUpdateBtnClickCommand}">Update</Button>
+                    <Button Grid.Column="2"  Width="auto" Margin="5,0,5,0" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnCancelBtnClickCommand}">Cancel</Button>
+                    <Button Grid.Column="3"  Margin="20,0,5,0" CommandParameter="{Binding}" Command="{Binding ElementName=Window, Path=OnRemoveBtnClickCommand}">Delete</Button>
+                </Grid>
             </Grid>
         </DataTemplate>
     </Window.Resources>
@@ -47,15 +58,13 @@
         <DockPanel Grid.Row="1" Grid.RowSpan="2"  Grid.Column="0" x:Name="CsvListContainer" Margin="0,0,10,0">
             <Grid DockPanel.Dock="Top">
                 <Label x:Name="namesFoundCountLbl" HorizontalAlignment="Left" Content="- names found in csv file"></Label>
-                <Label x:Name="sortByLbl" Width="70px" Margin="0,0,80,0" HorizontalAlignment="Right" VerticalAlignment="Top">sort by:</Label>
-                <ComboBox x:Name="sortByCbx" Width="100px" Height="28" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" IsEnabled="False" SelectionChanged="ComboBox_SelectionChanged" ></ComboBox>
+                <wpfTool:WatermarkComboBox x:Name="sortByCbx" Width="100px" Height="28" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Watermark="sort By" IsEnabled="False" SelectionChanged="ComboBox_SelectionChanged" ></wpfTool:WatermarkComboBox>
             </Grid>
             <!-- list names parsed in file in a scrollable text area read only box -->
             <Grid DockPanel.Dock="Bottom">
-                <Label x:Name="AddNewLbl" Margin="0,0,0,0" HorizontalAlignment="Left">Add new name:</Label>
-                <TextBox x:Name="AddNewNameInp" Width="250px" Margin="0,26,0,0" HorizontalAlignment="Left"></TextBox>
-                <Button x:Name="AddNewNameBtn" Width="100px" Height="28" Margin="255,26,0,0" HorizontalAlignment="left" Click="AddNewNameBtn_Click">Add</Button>
-                <Button x:Name="ExportCurrentCsvBtn" Width="100px" Height="28" Margin="0,26,0,0" HorizontalAlignment="Right" IsEnabled="False" Click="ExportCurrentCsvBtn_Click">Export Csv</Button>
+                <wpfTool:WatermarkTextBox Watermark="Add New Name" x:Name="AddNewNameInp" Width="250px" Margin="0,0,0,0" HorizontalAlignment="Left"></wpfTool:WatermarkTextBox>
+                <Button x:Name="AddNewNameBtn" Width="100px" Height="28" Margin="255,0,0,0" HorizontalAlignment="left" Click="AddNewNameBtn_Click">Add</Button>
+                <Button x:Name="ExportCurrentCsvBtn" Width="100px" Height="28" Margin="0,0,0,0" HorizontalAlignment="Right" IsEnabled="False" Click="ExportCurrentCsvBtn_Click">Export Csv</Button>
             </Grid>
             <ListBox x:Name="csvNamesListBox" ItemTemplate="{StaticResource ListBoxItemTemplate}"/>
 
@@ -66,10 +75,9 @@
             <Button x:Name="StartBatchCreationBtn" Content="Start Batch Creation" MaxWidth="200" IsEnabled="False" Click="StartBatchCreationBtn_Click"/>
             <!-- dialog should autmatically open once start batch process btn clicked -->
             <Grid MaxWidth="300">
-                <Label Content="export output location:" Height="28" HorizontalAlignment="Left" Name="outputFolderPathLabel" VerticalAlignment="Top" />
-                <Button x:Name="OutputFolderBtn" Content="Change" MaxWidth="60" Width="60" Margin="0,26,70,0" HorizontalAlignment="Right" Click="OutputFolderBtn_Click"></Button>
-                <Button x:Name="OpenOutputFolderBtn" Content="Open" MaxWidth="60" Width="60" Margin="0,26,0,0" HorizontalAlignment="Right" Click="OpenOutputFolderBtn_Click"></Button>
-                <TextBox x:Name="OutputFolderPathInput" IsReadOnly="True" Height="23" MaxWidth="160" Width="160" Margin="0,26,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="{x:Null}"></TextBox>
+                <Button x:Name="OutputFolderBtn" Content="Change" MaxWidth="60" Width="60" Margin="0,0,70,0" HorizontalAlignment="Right" Click="OutputFolderBtn_Click"></Button>
+                <Button x:Name="OpenOutputFolderBtn" Content="Open" MaxWidth="60" Width="60" Margin="0,0,0,0" HorizontalAlignment="Right" Click="OpenOutputFolderBtn_Click"></Button>
+                <wpfTool:WatermarkTextBox x:Name="OutputFolderPathInput" IsReadOnly="True" Height="23" MaxWidth="160" Width="160" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="{x:Null}" Watermark="export output location"></wpfTool:WatermarkTextBox>
             </Grid>
 
         </StackPanel>
@@ -90,7 +98,7 @@
                     <!-- addding a simple image box, temporarily -->
                     <!--Image Grid.Row="1" Grid.Column="0" Source="nametag.jpg"></Image-->
                     <ScrollViewer x:Name="ImagePreviewBoxScrollContainer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="#FF262626">
-                        <local:ImageOverlayer x:Name="overlayer"  BackgroundImage="nametag.jpg" InSelectionMode="True" Text="hello" />
+                        <local:ImageOverlayer x:Name="overlayer"  BackgroundImage="nametag.jpg" InSelectionMode="True" />
                     </ScrollViewer>
                     <!-- create a wpf control -->
                     <!-- 
@@ -111,7 +119,7 @@
                         <StackPanel Grid.Column="0" Grid.Row="1" Margin="20,10,20,10">
                             <Grid>
                                 <Label Content="enter text:" Height="28" HorizontalAlignment="Left" Name="enterTextLabel" VerticalAlignment="Top" />
-                                <TextBox x:Name="placeholderTextInput"  Height="23" Margin="0,26,0,0" VerticalAlignment="Top" Text="Placeholder Name" TextChanged="placeholderTextInput_TextChanged"></TextBox>
+                                <wpfTool:WatermarkTextBox x:Name="placeholderTextInput"  Height="23" Margin="0,26,0,0" VerticalAlignment="Top" Watermark="Enter Text" TextChanged="placeholderTextInput_TextChanged"></wpfTool:WatermarkTextBox>
                             </Grid>
                             <Grid>
                                 <Label Content="select font size:" Height="28" HorizontalAlignment="Left" Name="selectFontSizeLabel" VerticalAlignment="Top" />
